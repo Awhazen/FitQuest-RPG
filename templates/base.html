@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}FitQuest RPG{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+{% if session.username %}
+<nav>
+  <div class="nav-inner">
+    <a href="{{ url_for('dashboard') }}" class="nav-brand">⚔️ FitQuest RPG</a>
+
+    <!-- Mobile hamburger -->
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">&#9776;</button>
+
+    <div class="nav-links" id="nav-links">
+      <a href="{{ url_for('dashboard') }}"    class="{% if request.endpoint == 'dashboard'    %}nav-active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('generate') }}"     class="{% if request.endpoint == 'generate'     %}nav-active{% endif %}">New Quest</a>
+      <a href="{{ url_for('achievements') }}" class="{% if request.endpoint == 'achievements' %}nav-active{% endif %}">Achievements</a>
+      <a href="{{ url_for('logout') }}" class="nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+{% else %}
+<nav>
+  <div class="nav-inner">
+    <span class="nav-brand">⚔️ FitQuest RPG</span>
+    <div class="nav-links">
+      <a href="{{ url_for('login') }}"    class="{% if request.endpoint == 'login'    %}nav-active{% endif %}">Login</a>
+      <a href="{{ url_for('register') }}" class="{% if request.endpoint == 'register' %}nav-active{% endif %}">Register</a>
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p class="loading-text" id="loading-text">Loading…</p>
+</div>
+
+<div class="container page-fade">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flash-list">
+        {% for category, message in messages %}
+          <li class="flash flash-{{ category }}">
+            {{ message }}
+            <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

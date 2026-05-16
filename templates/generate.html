@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}New Quest — FitQuest RPG{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">⚔️ Generate Quest</h1>
+  <p class="page-subtitle">Tell your coach what you're working with today.</p>
+</div>
+
+{% if has_pending %}
+<div class="flash flash-error" style="margin-bottom: 1.25rem;">
+  ⚠️ You already have an active quest. Complete it before generating a new one.
+  <a href="{{ url_for('dashboard') }}" class="btn btn-ghost" style="padding: 0.25rem 0.75rem; font-size: 0.82rem; margin-left: 0.5rem;">Go to Dashboard</a>
+</div>
+{% endif %}
+
+<div class="card {% if has_pending %}card-disabled{% endif %}">
+  <form id="generate-form" method="POST" action="{{ url_for('generate') }}" {% if has_pending %}style="opacity:0.5; pointer-events:none;"{% endif %}>
+
+    <!-- Fitness Goal -->
+    <div class="form-group">
+      <label for="fitness_goal">Fitness Goal</label>
+      <input
+        type="text"
+        id="fitness_goal"
+        name="fitness_goal"
+        placeholder="e.g. Build muscle, Lose weight, Improve cardio, Increase flexibility…"
+        required
+        maxlength="120"
+      />
+      <div class="char-counter" id="goal-counter">0 / 120</div>
+    </div>
+
+    <!-- Equipment -->
+    <div class="form-group">
+      <label for="equipment">Available Equipment</label>
+      <input
+        type="text"
+        id="equipment"
+        name="equipment"
+        placeholder="e.g. Dumbbells, barbell, pull-up bar — or just 'bodyweight only'"
+        required
+        maxlength="120"
+      />
+      <div class="char-counter" id="equip-counter">0 / 120</div>
+    </div>
+
+    <!-- Time + Energy row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="form-group">
+        <label for="workout_time">Available Time (minutes)</label>
+        <input
+          type="number"
+          id="workout_time"
+          name="workout_time"
+          value="30"
+          min="10"
+          max="120"
+          required
+        />
+        <div class="char-counter">10 – 120 minutes</div>
+      </div>
+
+      <div class="form-group">
+        <label for="energy_level">Energy Level</label>
+        <select id="energy_level" name="energy_level">
+          <option value="low">😴 Low — take it easy</option>
+          <option value="medium" selected>😐 Medium — steady pace</option>
+          <option value="high">⚡ High — let's go hard</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Soreness -->
+    <div class="form-group">
+      <label for="soreness">Current Soreness</label>
+      <select id="soreness" name="soreness">
+        <option value="none">✅ None — feeling fresh</option>
+        <option value="mild">😐 Mild — slight tightness</option>
+        <option value="moderate">😬 Moderate — noticeable soreness</option>
+        <option value="severe">🔴 Severe — really sore</option>
+      </select>
+    </div>
+
+    <!-- Coach Personality -->
+    <div class="form-group">
+      <label>Coach Personality</label>
+      <div class="personality-grid">
+
+        <input type="radio" name="coach_personality" id="p_drill" value="drill_sergeant" class="personality-option" />
+        <label for="p_drill" class="personality-label">
+          <span class="personality-emoji">🪖</span>
+          Drill Sergeant
+        </label>
+
+        <input type="radio" name="coach_personality" id="p_zen" value="zen_master" class="personality-option" />
+        <label for="p_zen" class="personality-label">
+          <span class="personality-emoji">🧘</span>
+          Zen Master
+        </label>
+
+        <input type="radio" name="coach_personality" id="p_hype" value="hype_beast" class="personality-option" />
+        <label for="p_hype" class="personality-label">
+          <span class="personality-emoji">🔥</span>
+          Hype Beast
+        </label>
+
+        <input type="radio" name="coach_personality" id="p_mentor" value="wise_mentor" class="personality-option" />
+        <label for="p_mentor" class="personality-label">
+          <span class="personality-emoji">🦉</span>
+          Wise Mentor
+        </label>
+
+        <input type="radio" name="coach_personality" id="p_buddy" value="friendly_buddy" class="personality-option" checked />
+        <label for="p_buddy" class="personality-label">
+          <span class="personality-emoji">😊</span>
+          Friendly Buddy
+        </label>
+
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        ⚔️ Generate Quest
+      </button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — FitQuest RPG{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Welcome back, {{ user.username }} 👋</h1>
+  <p class="page-subtitle">
+    <span class="title-badge">{{ title }}</span>
+    &nbsp;·&nbsp; Your adventure continues. Stay consistent, hero.
+  </p>
+</div>
+
+<!-- Stats row -->
+<div class="stats-row">
+  <div class="stat-badge">
+    <span class="stat-value" id="stat-level">{{ user.level }}</span>
+    <span class="stat-label">Level</span>
+  </div>
+  <div class="stat-badge">
+    <span class="stat-value streak-fire" id="stat-streak">{{ user.streak }}</span>
+    <span class="stat-label">Day Streak 🔥</span>
+  </div>
+  <div class="stat-badge">
+    <span class="stat-value" id="stat-xp">{{ user.xp }}</span>
+    <span class="stat-label">XP This Level</span>
+  </div>
+  <div class="stat-badge">
+    <span class="stat-value">{{ history | length }}</span>
+    <span class="stat-label">Quests Done</span>
+  </div>
+</div>
+
+<!-- XP Progress -->
+<div class="card" style="margin-bottom: 1.25rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+    <span style="font-weight: 600;" id="level-label">Level {{ user.level }} → {{ user.level + 1 }}</span>
+    <span id="xp-text" style="font-size: 0.85rem; color: var(--text-muted);">
+      {{ user.xp }} / {{ user.xp_to_next_level }} XP
+    </span>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-bar-fill" id="xp-bar-fill" style="width: {{ xp_percent }}%;"></div>
+  </div>
+
+  <!-- Bonus indicators -->
+  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem;">
+    {% if streak_multiplier > 1.0 %}
+    <span class="bonus-tag bonus-streak">
+      🔥 {{ "%.0f"|format((streak_multiplier - 1) * 100) }}% streak bonus active
+    </span>
+    {% endif %}
+    {% if not completed_today %}
+    <span class="bonus-tag bonus-daily">
+      ☀️ +20 XP daily bonus on next quest
+    </span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Active Quest -->
+{% if pending %}
+<div class="card quest-card" style="margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+    <span class="tag">⚡ Active Quest</span>
+    <span class="xp-pill">+{{ pending.xp_reward }} XP base</span>
+  </div>
+
+  <h2 class="quest-name">{{ pending.quest_name }}</h2>
+
+  <div class="coach-message">
+    "{{ pending.coach_message }}"
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+    <span class="tag">🎯 {{ pending.fitness_goal }}</span>
+    <span class="tag">🏋️ {{ pending.equipment }}</span>
+    <span class="tag">⏱ {{ pending.workout_time }} min</span>
+    <span class="tag">⚡ Energy: {{ pending.energy_level }}</span>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="{{ url_for('view_workout', workout_id=pending.id) }}" class="btn btn-ghost">
+      View Exercises
+    </a>
+    <button
+      id="complete-btn"
+      class="btn btn-success btn-lg"
+      onclick="completeWorkout({{ pending.id }})"
+    >
+      Complete Quest ✓
+    </button>
+  </div>
+</div>
+
+{% else %}
+<div class="card" style="margin-bottom: 1.25rem;">
+  <div class="empty-state">
+    <div class="empty-icon">🗺️</div>
+    <p style="font-weight: 600; margin-bottom: 0.5rem;">No active quest</p>
+    <p style="margin-bottom: 1.25rem;">Ready to begin your next challenge?</p>
+    <a href="{{ url_for('generate') }}" class="btn btn-primary">Generate Quest ⚔️</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent Achievements -->
+{% if recent_achievements %}
+<div class="card" style="margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+    <div class="card-title" style="margin-bottom: 0;">🏅 Recent Achievements</div>
+    <a href="{{ url_for('achievements') }}" style="font-size: 0.85rem;">View all →</a>
+  </div>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    {% for ach in recent_achievements %}
+    <div class="ach-chip unlocked">
+      <span>{{ ach.emoji }}</span>
+      <span>{{ ach.name }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="card" style="margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+    <div class="card-title" style="margin-bottom: 0;">🏅 Achievements</div>
+    <a href="{{ url_for('achievements') }}" style="font-size: 0.85rem;">View all →</a>
+  </div>
+  <p style="color: var(--text-muted); font-size: 0.9rem;">Complete your first quest to start earning achievements.</p>
+</div>
+{% endif %}
+
+<!-- Workout History -->
+<div class="card">
+  <div class="card-title">📜 Quest History</div>
+  {% if history %}
+  <div class="history-list">
+    {% for w in history %}
+    <div class="history-item">
+      <div>
+        <div class="quest-title">{{ w.quest_name }}</div>
+        <div class="history-meta">
+          {{ w.completed_at }} &middot; {{ w.workout_time }} min &middot; {{ w.fitness_goal }}
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span class="xp-pill">+{{ w.xp_reward }} XP</span>
+        <a href="{{ url_for('view_workout', workout_id=w.id) }}" class="btn btn-ghost" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">View</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding: 1.5rem;">
+    <p>No completed quests yet. Your legend starts now.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Result Modal -->
+<div class="modal-backdrop" id="result-modal">
+  <div class="modal">
+    <div class="modal-icon" id="modal-icon">🏆</div>
+    <h2 class="modal-title" id="modal-title">Quest Complete!</h2>
+
+    <div class="modal-body">
+      <!-- XP breakdown -->
+      <div class="xp-breakdown" id="xp-breakdown">
+        <div class="xp-row">
+          <span>Base XP</span>
+          <span id="modal-base-xp" class="xp-val"></span>
+        </div>
+        <div class="xp-row" id="streak-bonus-row" style="display:none;">
+          <span id="streak-bonus-label">Streak Bonus</span>
+          <span id="modal-streak-bonus" class="xp-val bonus"></span>
+        </div>
+        <div class="xp-row" id="daily-bonus-row" style="display:none;">
+          <span>☀️ Daily First Quest</span>
+          <span id="modal-daily-bonus" class="xp-val bonus"></span>
+        </div>
+        <div class="xp-row total-row">
+          <span>Total Earned</span>
+          <span id="modal-total-xp" class="xp-val gold"></span>
+        </div>
+      </div>
+
+      <p id="modal-streak" style="margin-top: 0.75rem; font-size: 0.9rem;"></p>
+
+      <!-- Level up banner -->
+      <div id="modal-levelup" style="display: none; margin-top: 1rem; padding: 0.85rem; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--accent);">
+        <p style="font-size: 1.15rem; font-weight: 700; color: var(--accent);">
+          ⬆️ LEVEL UP! You are now Level <span id="modal-new-level"></span>!
+        </p>
+        <p id="modal-new-title" style="font-size: 0.9rem; color: var(--gold); margin-top: 0.25rem;"></p>
+      </div>
+
+      <!-- New achievements -->
+      <div id="modal-achievements" style="display: none; margin-top: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">New Achievements</p>
+        <div id="modal-ach-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="closeModal()" style="margin-top: 0.5rem;">Claim Reward</button>
+  </div>
+</div>
+
+{% endblock %}
