@@ -1,4 +1,4 @@
-# ⚔️ FitQuest RPG
+# FitQuest RPG
 
 A Flask-powered fitness RPG web app that turns your daily workouts into epic quests. Earn XP, level up, maintain streaks, and get personalized coaching from an AI coach powered by the OpenAI API.
 
